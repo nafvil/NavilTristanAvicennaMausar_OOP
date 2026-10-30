@@ -151,7 +151,7 @@ public class Test {
         System.out.println("Entities Count: " + gameEntities.size());
 
         System.out.println("\n--- Turn 1: Player Fires Bullet ---");
-        Bullet bullet1 = player4.shootBullet();
+        Bullet bullet1 = new Bullet(200, 150, BulletType.AMULET, 10 + player4.getPower());
         bullet1.setX(200); // Align bullet X with Fairy
         bullet1.setY(150); // Placed below Fairy at y=150
         gameEntities.add(bullet1);

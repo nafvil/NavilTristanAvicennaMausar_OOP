@@ -3,8 +3,11 @@ package com.navil.frontend;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.navil.frontend.systems.AssetManager;
+import com.navil.frontend.systems.BulletManager;
+import com.navil.frontend.systems.EntityFactory;
 import com.navil.frontend.objects.GameObject;
 import com.navil.frontend.objects.Player;
 import com.navil.frontend.objects.enemies.Boss;
@@ -17,35 +20,36 @@ import java.util.Iterator;
 import java.util.List;
 
 public class Main extends ApplicationAdapter {
-    private ShapeRenderer shapeRenderer;
+    private SpriteBatch batch;
 
     private Player player;
-    private Fairy fairy;
+    private List<Fairy> fairy;
     private Boss boss;
     private Item powerItem;
     private Item pointItem;
+    private BulletManager bulletManager;
     private List<GameObject> entities;
 
     @Override
     public void create() {
-        shapeRenderer = new ShapeRenderer();
+        batch = new SpriteBatch();
+        fairy = new ArrayList<>();
         entities = new ArrayList<>();
+        bulletManager = new BulletManager();
 
-        // 1. Player: Red square (movable with W/A/S/D, shoots with Z)
-        player = new Player(280, 40, "Reimu Hakurei", 100, 15, 3);
+        // 1. Centralized Asset Registration (AssetManager Singleton + Flyweight)
+        AssetManager.getInstance().init();
 
-        // 2. Fairy: Pink square (stationary)
-        fairy = new Fairy(150, 380, "Stage 1 Fairy", 20);
-
-        // 3. Boss: Blue square (stationary, larger size)
-        boss = new Boss(380, 400, "Cirno", 150);
-
-        // 4. Items: White squares (moving downwards linearly)
-        powerItem = new Item(200, 450, 16, 16, 80f, ItemType.POWER, 500L);
-        pointItem = new Item(320, 480, 12, 12, 120f, ItemType.POINT, 1000L);
+        // 2. Instantiate entities via Factory Pattern (EntityFactory)
+        player = EntityFactory.createPlayer(280, 40, "Reimu Hakurei", 100, 15, 3);
+        fairy.add(EntityFactory.createFairy(150, 380, "Red Fairy", 20));
+        fairy.add(EntityFactory.createFairy(250, 380, "Blue Fairy", 20, "fairy_idle_blue"));
+        boss = EntityFactory.createBoss(380, 400, "Rumia", 150);
+        powerItem = EntityFactory.createItem(200, 450, ItemType.POWER);
+        pointItem = EntityFactory.createItem(320, 480, ItemType.POINT);
 
         entities.add(player);
-        entities.add(fairy);
+        entities.addAll(fairy);
         entities.add(boss);
         entities.add(powerItem);
         entities.add(pointItem);
@@ -57,10 +61,10 @@ public class Main extends ApplicationAdapter {
 
         // 1. Check Player Bullet shooting input (Key Z)
         if (Gdx.input.isKeyJustPressed(Input.Keys.Z)) {
-            entities.add(player.shootBullet());
+            player.shootBullet(bulletManager);
         }
 
-        // 2. Generic update & safe removal of off-screen/destroyed entities using non-static instance method
+        // 2. Generic update & safe removal of off-screen/destroyed entities using updateAndClean<T>()
         updateAndClean(entities, delta, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         // 3. Collision detection between active entities
@@ -81,17 +85,18 @@ public class Main extends ApplicationAdapter {
         // 4. Clear screen
         ScreenUtils.clear(0.1f, 0.1f, 0.15f, 1f);
 
-        // 5. Render filled hitboxes with ShapeRenderer
-        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
+        // 5. Render active entity sprites/animations with SpriteBatch
+        batch.begin();
         for (GameObject entity : entities) {
             if (!entity.isDestroyed()) {
-                entity.render(shapeRenderer);
+                entity.render(batch);
             }
         }
-        shapeRenderer.end();
+        bulletManager.render(batch);
+        batch.end();
     }
 
-    // Non-static (Instance) Generic Method with Bounded Type Parameter <T extends GameObject>
+    // Generic Instance Method with Bounded Type Parameter <T extends GameObject>
     public <T extends GameObject> void updateAndClean(List<T> list, float delta, float screenWidth, float screenHeight) {
         Iterator<T> iterator = list.iterator();
         while (iterator.hasNext()) {
@@ -107,28 +112,9 @@ public class Main extends ApplicationAdapter {
 
     @Override
     public void dispose() {
-        if (shapeRenderer != null) {
-            shapeRenderer.dispose();
+        if (batch != null) {
+            batch.dispose();
         }
+        AssetManager.getInstance().dispose();
     }
-}
-
-public void create() {
-    // TODO 1:
-    // When initializing the renderer, create a SpriteBatch and store it in batch.
-    // LibGDX hint: new SpriteBatch().
-
-    // TODO 2:
-    // Initialize the fairy and entities lists as empty ArrayLists.
-
-    // TODO 3:
-    // Before creating entities, get the AssetManager instance and call init().
-
-    // TODO 4:
-    // Update how all entities are created! Follow the table and create Player, Fairy, Boss, and Item
-    // using the appropriate EntityFactory methods.
-    // Add both Fairies to the fairy list using add(...).
-
-    // TODO 5:
-    // Add all the objects you have just created to entities.
 }

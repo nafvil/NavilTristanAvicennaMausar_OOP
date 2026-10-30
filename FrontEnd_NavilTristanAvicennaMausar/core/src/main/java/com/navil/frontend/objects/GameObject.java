@@ -14,12 +14,10 @@ public abstract class GameObject implements Collidable {
     protected float height;
     protected float speed;
     protected Color color;
-    protected boolean active = true;
-
-    // Graphics
     protected TextureRegion sprite;
     protected Animation<TextureRegion> animation;
     protected float stateTime = 0f;
+    protected boolean active = true;
 
     public GameObject(float x, float y, float width, float height, float speed, Color color) {
         this.x = x;
@@ -31,17 +29,10 @@ public abstract class GameObject implements Collidable {
     }
 
     public void update(float delta) {
-        // Base update method: advance the object's lifetime so its animation progresses
         stateTime += delta;
     }
 
-    public void render(ShapeRenderer shapeRenderer) {
-        if (shapeRenderer != null && color != null && active) {
-            shapeRenderer.setColor(color);
-            shapeRenderer.rect(x, y, width, height);
-        }
-    }
-
+    // Render with SpriteBatch (supports animated frames or static sprite)
     public void render(SpriteBatch batch) {
         if (batch != null && active) {
             if (animation != null) {
@@ -53,6 +44,14 @@ public abstract class GameObject implements Collidable {
         }
     }
 
+    // Render fallback with ShapeRenderer (for geometric hitboxes)
+    public void render(ShapeRenderer shapeRenderer) {
+        if (shapeRenderer != null && color != null && active) {
+            shapeRenderer.setColor(color);
+            shapeRenderer.rect(x, y, width, height);
+        }
+    }
+
     @Override
     public Rectangle getCoreHitbox() {
         return new Rectangle(x, y, width, height);
@@ -60,7 +59,6 @@ public abstract class GameObject implements Collidable {
 
     @Override
     public Rectangle getGrazeHitbox() {
-        // Graze hitbox is slightly larger than core hitbox (+10px padding)
         return new Rectangle(x - 10, y - 10, width + 20, height + 20);
     }
 
@@ -105,11 +103,12 @@ public abstract class GameObject implements Collidable {
 
     public Color getColor() { return color; }
     public void setColor(Color color) { this.color = color; }
-    public boolean isActive() { return active; }
 
     public TextureRegion getSprite() { return sprite; }
     public void setSprite(TextureRegion sprite) { this.sprite = sprite; }
 
     public Animation<TextureRegion> getAnimation() { return animation; }
     public void setAnimation(Animation<TextureRegion> animation) { this.animation = animation; }
+
+    public boolean isActive() { return active; }
 }

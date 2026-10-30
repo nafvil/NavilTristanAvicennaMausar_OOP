@@ -10,6 +10,6 @@ dependencies {
 }
 
 tasks.register('runTest', JavaExec) {
-    mainClass = 'com.netlab.frontend.Test'
+    mainClass = 'com.navil.frontend.Test'
     classpath = sourceSets.main.runtimeClasspath
 }
