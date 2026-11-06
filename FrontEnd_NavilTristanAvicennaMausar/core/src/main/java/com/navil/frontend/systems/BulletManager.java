@@ -4,94 +4,78 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.navil.frontend.objects.bullets.Bullet;
 import com.navil.frontend.objects.bullets.BulletType;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 
 public class BulletManager {
-    // 1. Pool Queues for Object Recycling (Object Pool Pattern)
-    private Queue<Bullet> playerBulletPool;
-    private Queue<Bullet> enemyBulletPool;
-
-    // 2. Lists of Active Bullets on Screen
     private List<Bullet> activePlayerBullets;
     private List<Bullet> activeEnemyBullets;
 
+    private Queue<Bullet> playerBulletPool;
+    private Queue<Bullet> enemyBulletPool;
+
     public BulletManager() {
-        // TODO:
-        // 1. Initialize playerBulletPool and enemyBulletPool as empty LinkedLists
-        // 2. Initialize activePlayerBullets and activeEnemyBullets as empty ArrayLists
-        playerBulletPool = new LinkedList<>();
-        enemyBulletPool = new LinkedList<>();
         activePlayerBullets = new ArrayList<>();
         activeEnemyBullets = new ArrayList<>();
+        playerBulletPool = new LinkedList<>();
+        enemyBulletPool = new LinkedList<>();
     }
 
+    // Object Pool Spawning for Player Bullets via EntityFactory
     public Bullet spawnPlayerBullet(float x, float y, float vx, float vy, int damage) {
-        // TODO:
-        // 1. Check whether playerBulletPool is not empty.
-        //    If so, poll from the pool. If not, create a new one using the Factory.
-        // 2. Re-initialize the bullet.
-        // 3. Add the bullet to the activePlayerBullets list.
-        // 4. Return the bullet instance.
-        Bullet bullet = null;
+        Bullet bullet;
         if (!playerBulletPool.isEmpty()) {
-            bullet = playerBulletPool.poll();
+            bullet = playerBulletPool.poll(); // Recycles pooled object
+            bullet.init(x, y, vx, vy, BulletType.AMULET, damage, true);
         } else {
-
+            bullet = EntityFactory.createPlayerBullet(x, y, damage); // Factory Pattern
+            bullet.init(x, y, vx, vy, BulletType.AMULET, damage, true);
         }
-        bullet.init(x, y, vx, vy, BulletType.AMULET, damage, true);
         activePlayerBullets.add(bullet);
         return bullet;
     }
 
+    // Object Pool Spawning for Enemy Bullets via EntityFactory
     public Bullet spawnEnemyBullet(float x, float y, float vx, float vy, int damage) {
-        Bullet bullet = null;
+        Bullet bullet;
         if (!enemyBulletPool.isEmpty()) {
-            bullet = enemyBulletPool.poll();
+            bullet = enemyBulletPool.poll(); // Recycles pooled object
+            bullet.init(x, y, vx, vy, BulletType.DANMAKU, damage, false);
         } else {
-
+            bullet = EntityFactory.createEnemyBullet(x, y, damage); // Factory Pattern
+            bullet.init(x, y, vx, vy, BulletType.DANMAKU, damage, false);
         }
-        bullet.init(x, y, vx, vy, BulletType.AMULET, damage, isEnemyBullet: true);
         activeEnemyBullets.add(bullet);
         return bullet;
     }
 
     public void update(float delta, float screenWidth, float screenHeight) {
-        // 1. Player bullet recycling & movement (5 Points)
-        // TODO:
-        // - Copy-paste the iterator loop from updateAndClean() in Main.java
-        Iterator<Bullet> pIterator = activePlayerBullets.iterator();
-        while (pIterator.hasNext()) {
-            Bullet entity = pIterator.next();
-            entity.update(delta);
+        // Safe update & recycling of player bullets using Iterator
+        Iterator<Bullet> pIter = activePlayerBullets.iterator();
+        while (pIter.hasNext()) {
+            Bullet bullet = pIter.next();
+            bullet.update(delta);
 
-            if (entity.isOffScreen(screenWidth, screenHeight) || entity.isDestroyed()) {
-                pIterator.remove();
-                entity.destroy();
-                playerBulletPool.offer(entity);
+            if (bullet.isOffScreen(screenWidth, screenHeight) || bullet.isDestroyed()) {
+                bullet.destroy();
+                pIter.remove();
+                playerBulletPool.offer(bullet); // Return to pool!
             }
         }
-        // - Change the class referenced by the iterator to `Bullet` instead of T
-        //   and change the referenced list to activePlayerBullets
-        // - Change the check to whether the bullet is off-screen
-        //   OR the bullet is already marked as destroyed
-        //   - If YES:
-        //     * Mark the bullet as destroyed (destroy)
-        //     * Safely remove the bullet from the active bullet list
-        //     * Return the bullet to the pool queue
 
-        // 2. Enemy bullet recycling & movement (5 Points)
-        // TODO:
-        // - Follow the exact same procedure as above for activeEnemyBullets
-        // - Enemy bullets that go off-screen or are destroyed are returned to enemyBulletPool via offer()
-        Iterator<Bullet> eIterator = activeEnemyBullets.iterator();
-        while (eIterator.hasNext()) {
-            Bullet entity = eIterator.next();
-            entity.update(delta);
+        // Safe update & recycling of enemy bullets using Iterator
+        Iterator<Bullet> eIter = activeEnemyBullets.iterator();
+        while (eIter.hasNext()) {
+            Bullet bullet = eIter.next();
+            bullet.update(delta);
 
-            if (entity.isOffScreen(screenWidth, screenHeight) || entity.isDestroyed()) {
-                eIterator.remove();
-                entity.destroy();
-                enemyBulletPool.offer(entity);
+            if (bullet.isOffScreen(screenWidth, screenHeight) || bullet.isDestroyed()) {
+                bullet.destroy();
+                eIter.remove();
+                enemyBulletPool.offer(bullet); // Return to pool!
             }
         }
     }
@@ -105,7 +89,20 @@ public class BulletManager {
         }
     }
 
-    // Helper methods to access pools and active lists
+    public void freePlayerBullet(Bullet bullet) {
+        if (activePlayerBullets.remove(bullet)) {
+            bullet.destroy();
+            playerBulletPool.offer(bullet);
+        }
+    }
+
+    public void freeEnemyBullet(Bullet bullet) {
+        if (activeEnemyBullets.remove(bullet)) {
+            bullet.destroy();
+            enemyBulletPool.offer(bullet);
+        }
+    }
+
     public List<Bullet> getActivePlayerBullets() { return activePlayerBullets; }
     public List<Bullet> getActiveEnemyBullets() { return activeEnemyBullets; }
     public int getPlayerPoolSize() { return playerBulletPool.size(); }

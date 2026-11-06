@@ -54,7 +54,8 @@ public class EntityFactory {
     }
 
     public static Bullet createPlayerBullet(float x, float y, int damage, String spriteKey) {
-        TextureRegion sprite = AssetManager.getInstance().getTextureRegion(spriteKey);
+        String key = (spriteKey != null) ? spriteKey : "bullet_amulet";
+        TextureRegion sprite = AssetManager.getInstance().getTextureRegion(key);
         Bullet bullet = new Bullet(x, y, BulletType.AMULET, damage);
         bullet.setSprite(sprite);
         return bullet;

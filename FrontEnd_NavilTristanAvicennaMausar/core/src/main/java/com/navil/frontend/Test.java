@@ -1,14 +1,16 @@
 package com.navil.frontend;
 
-import com.navil.frontend.objects.bullets.BulletType;
 import com.navil.frontend.objects.GameObject;
 import com.navil.frontend.objects.Player;
 import com.navil.frontend.objects.bullets.Bullet;
+import com.navil.frontend.objects.bullets.BulletType;
 import com.navil.frontend.objects.enemies.Boss;
 import com.navil.frontend.objects.enemies.Enemy;
 import com.navil.frontend.objects.enemies.Fairy;
 import com.navil.frontend.objects.items.Item;
 import com.navil.frontend.objects.items.ItemType;
+import com.navil.frontend.systems.BulletManager;
+import com.navil.frontend.systems.CollisionReferee;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -91,7 +93,7 @@ public class Test {
         // 2. Initializing List<GameObject> entities for iterative updates
         List<GameObject> entities = new ArrayList<>();
         Player p = new Player(100, 100, "Reimu Hakurei", 100, 15, 3);
-        Fairy f = new Fairy(100, 100, "Stage 1 Fairy", 20);     // Placed at (100, 100) -> Collides with player!
+        Fairy f = new Fairy(100, 114, "Stage 1 Fairy", 20);     // Placed at (100, 114) -> Overlaps player core hitbox!
         Boss b = new Boss(200, 200, "Cirno", 150);
         Item item = new Item(300, 300, ItemType.POWER);
 
@@ -109,25 +111,25 @@ public class Test {
 
         System.out.println("\n--- Testing Polymorphic Collision Information ---");
 
-        // Test 1: Player at (100, 100) collides with Fairy at (100, 100)
+        // Test 1: Player at (100, 100) collides with Fairy at (100, 114)
         System.out.println("Simulating collision at (100, 100) (Fairy position):");
         if (p.getCoreHitbox().overlaps(f.getCoreHitbox())) {
             p.onCollision(f);
         }
 
-        // Test 2: Move player to Boss at (200, 200)
-        p.setX(200);
-        p.setY(200);
+        // Test 2: Move player to Boss at (208, 208)
+        p.setX(208);
+        p.setY(208);
         System.out.println("Moving player to (200, 200) (Boss position):");
         if (p.getCoreHitbox().overlaps(b.getCoreHitbox())) {
             p.onCollision(b);
         }
 
-        // Test 3: Move player to Item position at (300, item.getY())
-        p.setX(300);
+        // Test 3: Move player to Item position at (290, item.getY())
+        p.setX(290);
         p.setY(item.getY());
         System.out.println("Moving player to (300, " + item.getY() + ") (Item current position):");
-        if (p.getCoreHitbox().overlaps(item.getCoreHitbox())) {
+        if (p.getGrazeHitbox().overlaps(item.getCoreHitbox())) {
             p.onCollision(item);
         }
 
@@ -151,15 +153,12 @@ public class Test {
         System.out.println("Entities Count: " + gameEntities.size());
 
         System.out.println("\n--- Turn 1: Player Fires Bullet ---");
-        Bullet bullet1 = new Bullet(200, 150, BulletType.AMULET, 10 + player4.getPower());
-        bullet1.setX(200); // Align bullet X with Fairy
-        bullet1.setY(150); // Placed below Fairy at y=150
+        Bullet bullet1 = new Bullet(200, 150, 400f, BulletType.AMULET, 25);
         gameEntities.add(bullet1);
 
         System.out.println("Entities Count before update: " + gameEntities.size());
 
         System.out.println("\n--- Updating frame: Bullet moves upward & collides with Fairy ---");
-        // Simulate collision check
         for (int i = 0; i < gameEntities.size(); i++) {
             for (int j = i + 1; j < gameEntities.size(); j++) {
                 GameObject e1 = gameEntities.get(i);
@@ -171,22 +170,61 @@ public class Test {
             }
         }
 
-        // Test non-static instance method updateAndClean<T extends GameObject>
         runner.updateAndClean(gameEntities, 0.125f, 640, 480);
 
         System.out.println("Entities Count after generic Iterator cleanup: " + gameEntities.size());
 
-        System.out.println("\n--- Turn 2: Bullet Flies Off-Screen ---");
-        Bullet offScreenBullet = new Bullet(200, 450, 400f, BulletType.AMULET, 25);
-        gameEntities.add(offScreenBullet);
-        System.out.println("Initial Offscreen Bullet Y: " + offScreenBullet.getY());
-
-        System.out.println("Updating frame using non-static generic instance method updateAndClean<T> (0.5s movement):");
-        runner.updateAndClean(gameEntities, 0.5f, 640, 480);
-
-        System.out.println("Entities Count after off-screen generic Iterator cleanup: " + gameEntities.size());
-
         System.out.println("\n=== Module 4 Test Completed Successfully ===");
+
+
+        // ==========================================
+        // MODULE 7: OBJECT POOL & MEDIATOR PATTERN
+        // ==========================================
+        System.out.println("\n\n=== TOUHOU OOP PRACTICUM - MODULE 7: OBJECT POOL & MEDIATOR ===");
+
+        BulletManager bulletManager = new BulletManager();
+        CollisionReferee referee = new CollisionReferee();
+
+        Player player7 = new Player(200, 50, "Reimu Hakurei", 100, 15, 3);
+
+        Fairy enemyFairy = new Fairy(200, 200, "Stage 1 Fairy", 20); // HP 20
+        List<GameObject> m7Entities = new ArrayList<>();
+        m7Entities.add(enemyFairy);
+
+        System.out.println("\n--- Testing Object Pool ---");
+        System.out.println("Initial Player Pool Size: " + bulletManager.getPlayerPoolSize());
+        System.out.println("Initial Active Player Bullets: " + bulletManager.getActivePlayerBullets().size());
+
+        // Direct Object Pool Shooting
+        player7.shootBullet(bulletManager);
+        System.out.println("Active Player Bullets after 1st shoot: " + bulletManager.getActivePlayerBullets().size());
+
+        // Update bullets movement (y=50+48 -> 98, moves upwards to y=200 over 0.25s)
+        bulletManager.update(0.26f, 640, 480);
+
+        System.out.println("\n--- Testing Mediator Pattern Collision Resolution ---");
+        referee.resolveCollisions(player7, m7Entities, bulletManager);
+
+        // Cleanup offscreen / destroyed bullets back into pool
+        bulletManager.update(0.01f, 640, 480);
+
+        System.out.println("\n--- Object Pool Recycling Check ---");
+        System.out.println("Active Player Bullets after hit & recycling: " + bulletManager.getActivePlayerBullets().size());
+        System.out.println("Recycled Player Pool Size: " + bulletManager.getPlayerPoolSize());
+
+        // Shooting again re-uses pooled bullet!
+        player7.shootBullet(bulletManager);
+        System.out.println("Active Player Bullets after 2nd shoot (Re-used pooled instance): " + bulletManager.getActivePlayerBullets().size());
+        System.out.println("Player Pool Size after re-using: " + bulletManager.getPlayerPoolSize());
+
+        System.out.println("\n--- Testing Graze vs Core Hitbox Detection ---");
+        // Spawn 16x16 enemy bullet at (190, 50) -> Overlaps Graze Hitbox (x: 200..232, y: 50..98), misses Core Hitbox (x: 212..220, y: 70..78)
+        Bullet enemyBullet = bulletManager.spawnEnemyBullet(190, 50, 0, 0, 15);
+        long scoreBeforeGraze = player7.getScore();
+        referee.resolveCollisions(player7, m7Entities, bulletManager);
+        System.out.println("Graze score added (+50 pts): " + (player7.getScore() - scoreBeforeGraze == 50));
+
+        System.out.println("\n=== Module 7 Test Completed Successfully ===");
     }
 
     // Non-static (Instance) Generic Method with Bounded Type Parameter <T extends GameObject>

@@ -10,12 +10,10 @@ public class SpreadShot implements ShootingPattern {
     private float spreadAngleDegrees;
     private GameObject target;
 
-    // Static angle SpreadShot constructor
     public SpreadShot(float speed, int numBullets, float spreadAngleDegrees) {
         this(speed, numBullets, spreadAngleDegrees, null);
     }
 
-    // Targeted SpreadShot constructor (FAN_AIMED) that aims at a target
     public SpreadShot(float speed, int numBullets, float spreadAngleDegrees, GameObject target) {
         this.speed = speed;
         this.numBullets = numBullets;
@@ -25,7 +23,7 @@ public class SpreadShot implements ShootingPattern {
 
     @Override
     public void execute(float originX, float originY, BulletManager bulletManager, boolean isPlayer) {
-        // Base center angle: if there is a target, aim at it; otherwise, use 90° (Player) / 270° (Enemy)
+        // Base direction angle: Aim at target if present (ZUN FAN_AIMED), otherwise default 90 deg (Player) / 270 deg (Enemy)
         float centerAngle;
         if (target != null) {
             float targetCenterX = target.getX() + target.getWidth() / 2f;
@@ -37,13 +35,13 @@ public class SpreadShot implements ShootingPattern {
 
         float startAngle = centerAngle - (spreadAngleDegrees / 2f);
         float angleStep = (numBullets > 1) ? (spreadAngleDegrees / (numBullets - 1)) : 0;
+
         int damage = isPlayer ? 25 : 15;
 
         for (int i = 0; i < numBullets; i++) {
             float angleDeg = startAngle + (i * angleStep);
             float angleRad = (float) Math.toRadians(angleDeg);
 
-            // Decompose velocity into X and Y axes
             float vx = (float) (speed * Math.cos(angleRad));
             float vy = (float) (speed * Math.sin(angleRad));
 

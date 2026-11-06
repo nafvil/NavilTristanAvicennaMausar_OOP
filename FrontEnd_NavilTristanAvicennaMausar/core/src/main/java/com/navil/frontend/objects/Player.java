@@ -7,12 +7,13 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.navil.frontend.objects.bullets.Bullet;
-import com.navil.frontend.objects.patterns.ShootingPattern;
 import com.navil.frontend.objects.items.Item;
 import com.navil.frontend.objects.items.ItemType;
 import com.navil.frontend.objects.enemies.Boss;
 import com.navil.frontend.objects.enemies.Enemy;
 import com.navil.frontend.objects.enemies.Fairy;
+import com.navil.frontend.objects.patterns.ShootingPattern;
+import com.navil.frontend.objects.patterns.shootingStrategy.SpreadShot;
 import com.navil.frontend.systems.AssetManager;
 import com.navil.frontend.systems.BulletManager;
 import com.navil.frontend.systems.EntityFactory;
@@ -24,8 +25,6 @@ public class Player extends GameObject {
     private int spellCards;
     private long score;
     private int currentDir = 0; // -1: Left, 0: Idle, 1: Right
-    // TODO: Declare a private field named shootingPattern of type ShootingPattern.
-    //       No need to initialize it right away.
     private ShootingPattern shootingPattern;
 
     public Player(String name, int hp, int power, int spellCards) {
@@ -44,6 +43,17 @@ public class Player extends GameObject {
         this.power = power;
         this.spellCards = spellCards;
         this.score = 0;
+    }
+
+    // Touhou Hitboxes: Graze Hitbox is the full sprite size (32x48), Core Hitbox is small centered dot (8x8)
+    @Override
+    public Rectangle getGrazeHitbox() {
+        return new Rectangle(x, y, width, height); // Full sprite size
+    }
+
+    @Override
+    public Rectangle getCoreHitbox() {
+        return new Rectangle(x + width / 2f - 4f, y + height / 2f - 4f, 8f, 8f); // Small centered 8x8 hurtbox
     }
 
     @Override
@@ -95,40 +105,18 @@ public class Player extends GameObject {
         }
     }
 
-    // TODO: Update shootBullet() to shootBullet(BulletManager bulletManager)!
+    // Strategy Pattern Bullet Shooting (Polymorphic with Boss)
     public void shootBullet(BulletManager bulletManager) {
-        // - If bulletManager is null, return immediately
-        // - If shootingPattern is not null, call execute() from the player's muzzle coordinates (x + width / 2f - 8f, y + height)
-        // - If shootingPattern is null, call bulletManager.spawnPlayerBullet() directly
         if (bulletManager == null) return;
-
-        float muzzleX = x + width / 2f - 8f;
-        float muzzleY = y + height;
-
         if (shootingPattern != null) {
-            shootingPattern.execute(muzzleX, muzzleY, bulletManager, true);
+            shootingPattern.execute(x + width / 2f - 8f, y + height, bulletManager, true);
         } else {
-            int damage = 10 + power;
-            System.out.println(name + " shoots bullet dealing " + damage + " DMG!");
-            bulletManager.spawnPlayerBullet(muzzleX, muzzleY, 0f, 400f, damage);
+            bulletManager.spawnPlayerBullet(x + width / 2f - 8f, y + height, 0, 400f, 10 + power);
         }
     }
 
-    @Override
-    public Rectangle getCoreHitbox() {
-        // TODO: Return a new 8x8 Rectangle centered right in the middle of the sprite:
-        // - X coordinate: x + (width / 2f) - 4f
-        // - Y coordinate: y + (height / 2f) - 4f
-        // - width: 8f, height: 8f
-        return new Rectangle(x + (width / 2f) - 4f, y + (height / 2f) - 4f, 8f, 8f);
-    }
-
-    @Override
-    public Rectangle getGrazeHitbox() {
-        // TODO: Return a new Rectangle at position coordinates (x, y)
-        //       covering the entire visual sprite dimensions (width, height)
-        return new Rectangle(x, y, width, height);
-    }
+    public ShootingPattern getShootingPattern() { return shootingPattern; }
+    public void setShootingPattern(ShootingPattern shootingPattern) { this.shootingPattern = shootingPattern; }
 
     public void moveUp(float delta) { this.y += speed * delta; }
     public void moveDown(float delta) { this.y -= speed * delta; }
@@ -226,8 +214,4 @@ public class Player extends GameObject {
     public void setSpellCards(int spellCards) { this.spellCards = spellCards; }
 
     public long getScore() { return score; }
-
-    // TODO: Provide a getter and setter for shootingPattern
-    public ShootingPattern getShootingPattern() { return shootingPattern; }
-    public void setShootingPattern(ShootingPattern shootingPattern) { this.shootingPattern = shootingPattern; }
 }
