@@ -1,8 +1,11 @@
 package com.navil.frontend.systems;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.navil.frontend.objects.GameObject;
 import com.navil.frontend.objects.bullets.Bullet;
 import com.navil.frontend.objects.bullets.BulletType;
+import com.navil.frontend.objects.items.Item;
+import com.navil.frontend.objects.items.ItemType;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -100,6 +103,36 @@ public class BulletManager {
         if (activeEnemyBullets.remove(bullet)) {
             bullet.destroy();
             enemyBulletPool.offer(bullet);
+        }
+    }
+
+    // Spell Card (Bomb) Execution: Clear all active enemy bullets and convert them into POINT item drops!
+    public void clearEnemyBullets(List<GameObject> entities) {
+        Iterator<Bullet> iterator = activeEnemyBullets.iterator();
+        while (iterator.hasNext()) {
+            Bullet bullet = iterator.next();
+            if (entities != null) {
+                Item item = EntityFactory.createItem(bullet.getX(), bullet.getY(), ItemType.POINT);
+                entities.add(item);
+            }
+            bullet.destroy();
+            iterator.remove();
+            enemyBulletPool.offer(bullet);
+        }
+    }
+
+    public void clearEnemyBullets() {
+        clearEnemyBullets(null);
+    }
+
+    // Clear all player bullets when restarting the game (Copy-Paste):
+    public void clearPlayerBullets() {
+        Iterator<Bullet> pIter = activePlayerBullets.iterator();
+        while (pIter.hasNext()) {
+            Bullet bullet = pIter.next();
+            bullet.destroy();
+            pIter.remove();
+            playerBulletPool.offer(bullet);
         }
     }
 
