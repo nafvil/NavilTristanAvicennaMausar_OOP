@@ -3,8 +3,11 @@ package com.navil.frontend;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.navil.frontend.commands.Command;
+import com.navil.frontend.commands.InputHandler;
 import com.navil.frontend.objects.GameObject;
 import com.navil.frontend.objects.Player;
 import com.navil.frontend.objects.enemies.Boss;
@@ -15,6 +18,7 @@ import com.navil.frontend.systems.AssetManager;
 import com.navil.frontend.systems.BulletManager;
 import com.navil.frontend.systems.CollisionReferee;
 import com.navil.frontend.systems.EntityFactory;
+import com.navil.frontend.ui.GameHUD;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -31,6 +35,8 @@ public class Main extends ApplicationAdapter {
 
     private BulletManager bulletManager;
     private CollisionReferee collisionReferee;
+    private InputHandler inputHandler;
+    private GameHUD gameHUD;
     private float enemyShootTimer = 0f;
 
     @Override
@@ -40,6 +46,8 @@ public class Main extends ApplicationAdapter {
         entities = new ArrayList<>();
         bulletManager = new BulletManager();
         collisionReferee = new CollisionReferee();
+        inputHandler = new InputHandler();
+        gameHUD = new GameHUD();
 
         // 1. Centralized Asset Registration (AssetManager Singleton + Flyweight)
         AssetManager.getInstance().init();
@@ -52,30 +60,42 @@ public class Main extends ApplicationAdapter {
         powerItem = EntityFactory.createItem(180, 450, ItemType.POWER);
         pointItem = EntityFactory.createItem(220, 480, ItemType.POINT);
 
+        // 3. Register GameHUD as Observer to Player (Observer Pattern)
+        player.registerObserver(gameHUD);
+
         entities.add(player);
         entities.addAll(fairy);
         entities.add(boss);
         entities.add(powerItem);
         entities.add(pointItem);
+
+        // 4. Configure InputHandler with entities list for Bomb drops
+        inputHandler.setEntities(entities);
     }
 
     @Override
     public void render() {
         float delta = Gdx.graphics.getDeltaTime();
 
-        // 1. Check Player Bullet shooting input (Key Z -> BulletManager Object Pool)
-        if (Gdx.input.isKeyJustPressed(Input.Keys.Z)) {
-            player.shootBullet(bulletManager);
+        // 0. Restart Game on 'R' key when Game Over
+        if (Gdx.input != null && Gdx.input.isKeyJustPressed(Input.Keys.R) && player.isGameOver()) {
+            restartGame();
         }
 
-        // 2. Periodic Enemy Action Scheduler
+        // 1. Process Input via Command Pattern (Bob Nystrom Invoker Command Stream)
+        List<Command> commands = inputHandler.handleInput(delta);
+        for (Command command : commands) {
+            command.execute(player, bulletManager);
+        }
+
+        // 2. Periodic Enemy Action Scheduler (Foreshadows Module 9 strategy updates)
         updateEnemyScheduler(delta);
 
         // 3. Generic update & safe removal of standard entities
-        updateAndClean(entities, delta, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        updateAndClean(entities, delta, 416, 560);
 
         // 4. Object Pool Update (BulletManager)
-        bulletManager.update(delta, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        bulletManager.update(delta, 416, 560);
 
         // 5. Mediator Pattern Collision Resolution (CollisionReferee - Core vs Graze detection)
         collisionReferee.resolveCollisions(player, entities, bulletManager);
@@ -83,7 +103,7 @@ public class Main extends ApplicationAdapter {
         // 6. Clear screen
         ScreenUtils.clear(0.1f, 0.1f, 0.15f, 1f);
 
-        // 7. Render active entity sprites and pooled bullets with SpriteBatch
+        // 7. Render active entity sprites, pooled bullets, and Observer UI HUD with SpriteBatch
         batch.begin();
         for (GameObject entity : entities) {
             if (!entity.isDestroyed()) {
@@ -91,10 +111,15 @@ public class Main extends ApplicationAdapter {
             }
         }
         bulletManager.render(batch);
+        gameHUD.render(batch);
         batch.end();
+
+        // 8. Render UI Frame Lines & Focus Mode Core Hurtbox Indicator (Drawn ON TOP of sprites!)
+        gameHUD.renderBackground();
+        player.renderFocusIndicator(gameHUD.getShapeRenderer());
     }
 
-    // Periodic Enemy Action Scheduler
+    // Periodic Enemy Action Scheduler (Foreshadows Module 9 dynamic strategy updates)
     private void updateEnemyScheduler(float delta) {
         enemyShootTimer += delta;
         if (enemyShootTimer >= 1.5f) {
@@ -142,6 +167,9 @@ public class Main extends ApplicationAdapter {
     public void dispose() {
         if (batch != null) {
             batch.dispose();
+        }
+        if (gameHUD != null) {
+            gameHUD.dispose();
         }
         AssetManager.getInstance().dispose();
     }

@@ -39,20 +39,24 @@ public class CollisionReferee {
         }
 
         // 2. Mediator checks Enemy Bullets vs Player (Core Hitbox vs Graze Hitbox)
-        for (Bullet bullet : bulletManager.getActiveEnemyBullets()) {
+        List<Bullet> currentEnemyBullets = new ArrayList<>(bulletManager.getActiveEnemyBullets());
+        for (Bullet bullet : currentEnemyBullets) {
             if (bullet.isDestroyed()) continue;
 
             if (!player.isDestroyed()) {
                 // Priority A: Direct Core Hitbox Collision (Damage & Life Loss)
                 if (bullet.getCoreHitbox().overlaps(player.getCoreHitbox())) {
-                    System.out.println("[CollisionReferee] CORE HIT! Enemy Bullet hit " + player.getName() + " for " + bullet.getDamage() + " DMG!");
-                    player.takeDamage(bullet.getDamage());
-                    bullet.destroy(); // Mark bullet for recycling by BulletManager
+                    if (!player.isInvulnerable()) {
+                        System.out.println("[CollisionReferee] CORE HIT! Enemy Bullet hit " + player.getName() + " for " + bullet.getDamage() + " DMG!");
+                        bullet.destroy(); // Mark bullet for recycling by BulletManager
+                        player.takeDamage(100, bulletManager, entities);
+                        break; // Fatal hit wipes all active enemy bullets; break out of bullet loop for this frame!
+                    }
                 } 
                 // Priority B: Graze Hitbox Collision (Passes close to player without hitting core)
                 else if (!bullet.hasBeenGrazed() && bullet.getCoreHitbox().overlaps(player.getGrazeHitbox())) {
                     bullet.setGrazed(true);
-                    player.addScore(50); // Graze bonus score
+                    player.addGraze(); // Increments graze count, adds 50 pts, and notifies GameObserver HUD!
                     System.out.println("[CollisionReferee] GRAZE! " + player.getName() + " grazed an enemy bullet (+50 pts)!");
                 }
             }
@@ -70,8 +74,10 @@ public class CollisionReferee {
                 }
             } else if (entity instanceof Enemy enemy) {
                 if (player.getCoreHitbox().overlaps(enemy.getCoreHitbox())) {
-                    System.out.println("[CollisionReferee] CORE COLLISION! Player collided with " + enemy.getName() + "!");
-                    player.takeDamage(10);
+                    if (!player.isInvulnerable()) {
+                        System.out.println("[CollisionReferee] CORE COLLISION! Player collided with " + enemy.getName() + "!");
+                        player.takeDamage(100, bulletManager, entities);
+                    }
                 }
             }
         }

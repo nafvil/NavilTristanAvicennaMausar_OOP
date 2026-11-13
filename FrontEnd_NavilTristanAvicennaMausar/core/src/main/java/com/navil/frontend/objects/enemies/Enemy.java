@@ -1,10 +1,12 @@
 package com.navil.frontend.objects.enemies;
 
 import com.badlogic.gdx.graphics.Color;
-import com.navil.frontend.objects.GameObject;
+import com.navil.frontend.objects.EntityShooter;
 import com.navil.frontend.objects.Player;
+import com.navil.frontend.objects.patterns.ShootingPattern;
+import com.navil.frontend.objects.patterns.entityStrategy.EntityMovementPattern;
 
-public class Enemy extends GameObject {
+public class Enemy extends EntityShooter {
     protected String name;
     protected int hp;
     protected int maxHp;
@@ -20,6 +22,15 @@ public class Enemy extends GameObject {
 
     public Enemy(float x, float y, float width, float height, Color color, String name, int hp, long scoreValue) {
         super(x, y, width, height, 0, color);
+        this.name = name;
+        this.hp = hp;
+        this.maxHp = hp;
+        this.scoreValue = scoreValue;
+    }
+
+    // Constructor Injection: strategies are injected from the outside
+    public Enemy(float x, float y, float width, float height, Color color, String name, int hp, long scoreValue, ShootingPattern shootingPattern, EntityMovementPattern movementPattern) {
+        super(x, y, width, height, 0, color, shootingPattern, movementPattern);
         this.name = name;
         this.hp = hp;
         this.maxHp = hp;

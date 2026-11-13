@@ -1,5 +1,12 @@
 package com.navil.frontend;
 
+import com.navil.frontend.commands.BombCommand;
+import com.navil.frontend.commands.Command;
+import com.navil.frontend.commands.FocusCommand;
+import com.navil.frontend.commands.InputHandler;
+import com.navil.frontend.commands.MoveCommand;
+import com.navil.frontend.commands.ShootCommand;
+import com.navil.frontend.observers.GameObserver;
 import com.navil.frontend.objects.GameObject;
 import com.navil.frontend.objects.Player;
 import com.navil.frontend.objects.bullets.Bullet;
@@ -11,6 +18,7 @@ import com.navil.frontend.objects.items.Item;
 import com.navil.frontend.objects.items.ItemType;
 import com.navil.frontend.systems.BulletManager;
 import com.navil.frontend.systems.CollisionReferee;
+import com.navil.frontend.ui.GameHUD;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -223,8 +231,83 @@ public class Test {
         long scoreBeforeGraze = player7.getScore();
         referee.resolveCollisions(player7, m7Entities, bulletManager);
         System.out.println("Graze score added (+50 pts): " + (player7.getScore() - scoreBeforeGraze == 50));
+        System.out.println("Player Graze Counter: " + player7.getGrazeCount());
 
         System.out.println("\n=== Module 7 Test Completed Successfully ===");
+
+
+        // ==========================================
+        // MODULE 8: COMMAND PATTERN & OBSERVER PATTERN
+        // ==========================================
+        System.out.println("\n\n=== TOUHOU OOP PRACTICUM - MODULE 8: COMMAND & OBSERVER PATTERNS ===");
+
+        Player player8 = new Player(200, 50, "Reimu Hakurei", 100, 15, 3);
+        BulletManager bManager8 = new BulletManager();
+        GameHUD hud = new GameHUD();
+
+        System.out.println("\n--- Testing Observer Pattern Registration ---");
+        player8.registerObserver(hud);
+        System.out.println("HUD Received Initial Score: " + hud.getScore());
+        System.out.println("HUD Received Initial HP:    " + hud.getHp());
+        System.out.println("HUD Received Initial Lives: " + hud.getLives());
+        System.out.println("HUD Received Initial Bombs: " + hud.getSpellCards());
+        System.out.println("HUD Received Initial Graze: " + hud.getGrazeCount());
+
+        System.out.println("\n--- Testing Command Pattern Execution ---");
+
+        // 1. Move Command
+        Command moveUp = new MoveCommand(0, 0.5f);
+        moveUp.execute(player8, bManager8);
+        System.out.println("Player position after MoveCommand: (" + player8.getX() + ", " + player8.getY() + ")");
+
+        // 2. Focus Command
+        Command focusOn = new FocusCommand(true);
+        focusOn.execute(player8, bManager8);
+        System.out.println("Player Focus Mode Enabled: " + player8.isFocused());
+
+        // 3. Shoot Command
+        Command shoot = new ShootCommand();
+        shoot.execute(player8, bManager8);
+        System.out.println("Active Player Bullets after ShootCommand: " + bManager8.getActivePlayerBullets().size());
+
+        // 4. Bomb / Spell Card Command (Screen Clearing)
+        bManager8.spawnEnemyBullet(200, 300, 0, -100, 15);
+        bManager8.spawnEnemyBullet(250, 350, 0, -100, 15);
+        System.out.println("Active Enemy Bullets before Bomb: " + bManager8.getActiveEnemyBullets().size());
+
+        Command bomb = new BombCommand();
+        bomb.execute(player8, bManager8);
+
+        System.out.println("Active Enemy Bullets after BombCommand: " + bManager8.getActiveEnemyBullets().size());
+        System.out.println("HUD Received Updated Bombs: " + hud.getSpellCards());
+
+        System.out.println("\n--- Testing Observer Notification on Graze & Item Collection ---");
+        player8.addGraze();
+        System.out.println("HUD Received Updated Graze: " + hud.getGrazeCount());
+
+        Item pItem = new Item(200, 50, ItemType.POWER);
+        player8.collectItem(pItem);
+        System.out.println("HUD Received Updated Score: " + hud.getScore());
+
+        System.out.println("\n--- Testing Life Stock & Respawn System ---");
+        System.out.println("Initial Lives: " + player8.getLives());
+        player8.update(6.0f); // Expire bomb invulnerability timer (5.0s)
+        player8.takeDamage(100, bManager8, null);
+        System.out.println("Lives after fatal hit: " + player8.getLives() + " (Respawned with i-frames: " + player8.isInvulnerable() + ")");
+        System.out.println("HUD Received Updated Lives: " + hud.getLives());
+        Item lifeItem = new Item(200, 50, ItemType.LIFE);
+        player8.collectItem(lifeItem);
+        System.out.println("Lives after collecting LIFE item: " + player8.getLives());
+        System.out.println("HUD Received Restored Lives: " + hud.getLives());
+
+        System.out.println("\n--- Testing InputHandler (Bob Nystrom Invoker & Key Rebinding) ---");
+        InputHandler inputHandler = new InputHandler();
+        System.out.println("Default Shoot Key: " + inputHandler.getKeyShoot() + " (Z)");
+        inputHandler.setKeyShoot(62); // Rebind to Space
+        System.out.println("Rebound Shoot Key: " + inputHandler.getKeyShoot() + " (Space)");
+        System.out.println("Zero-GC Commands Buffer Initialized: " + (inputHandler.handleInput(0.016f) != null));
+
+        System.out.println("\n=== Module 8 Test Completed Successfully ===");
     }
 
     // Non-static (Instance) Generic Method with Bounded Type Parameter <T extends GameObject>

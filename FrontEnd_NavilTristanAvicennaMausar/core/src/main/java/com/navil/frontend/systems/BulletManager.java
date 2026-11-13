@@ -6,6 +6,7 @@ import com.navil.frontend.objects.bullets.Bullet;
 import com.navil.frontend.objects.bullets.BulletType;
 import com.navil.frontend.objects.items.Item;
 import com.navil.frontend.objects.items.ItemType;
+import com.navil.frontend.objects.patterns.bulletStrategy.HomingBulletMovement;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -19,6 +20,7 @@ public class BulletManager {
 
     private Queue<Bullet> playerBulletPool;
     private Queue<Bullet> enemyBulletPool;
+    private List<GameObject> entities; // [ADDITION] Add field to hold the arena entity list
 
     public BulletManager() {
         activePlayerBullets = new ArrayList<>();
@@ -27,32 +29,46 @@ public class BulletManager {
         enemyBulletPool = new LinkedList<>();
     }
 
-    // Object Pool Spawning for Player Bullets via EntityFactory
-    public Bullet spawnPlayerBullet(float x, float y, float vx, float vy, int damage) {
+    // [MODIFY] Update the Module 8 spawnPlayerBullet method with the following changes:
+    public Bullet spawnPlayerBullet(float x, float y, float vx, float vy, int damage, String spriteKey) { // Add String spriteKey as a parameter
+        String key = (spriteKey != null) ? spriteKey : "bullet_amulet"; // Add local String variable key
         Bullet bullet;
         if (!playerBulletPool.isEmpty()) {
-            bullet = playerBulletPool.poll(); // Recycles pooled object
+            bullet = playerBulletPool.poll();
             bullet.init(x, y, vx, vy, BulletType.AMULET, damage, true);
+            bullet.setSprite(AssetManager.getInstance().getTextureRegion(key)); // Add setSprite using key
         } else {
-            bullet = EntityFactory.createPlayerBullet(x, y, damage); // Factory Pattern
+            bullet = EntityFactory.createPlayerBullet(x, y, damage, key); // Add key as 4th argument
             bullet.init(x, y, vx, vy, BulletType.AMULET, damage, true);
         }
         activePlayerBullets.add(bullet);
         return bullet;
     }
 
-    // Object Pool Spawning for Enemy Bullets via EntityFactory
-    public Bullet spawnEnemyBullet(float x, float y, float vx, float vy, int damage) {
+    // [ADDITION] Add the following 5-parameter overloaded method (delegating to the 6-parameter method above):
+    public Bullet spawnPlayerBullet(float x, float y, float vx, float vy, int damage) {
+        return spawnPlayerBullet(x, y, vx, vy, damage, "bullet_amulet");
+    }
+
+    // [MODIFY] Update the Module 8 spawnEnemyBullet method with the following changes:
+    public Bullet spawnEnemyBullet(float x, float y, float vx, float vy, int damage, String spriteKey) { // Add String spriteKey as a parameter
+        String key = (spriteKey != null) ? spriteKey : "bullet_danmaku"; // Add local String variable key
         Bullet bullet;
         if (!enemyBulletPool.isEmpty()) {
-            bullet = enemyBulletPool.poll(); // Recycles pooled object
+            bullet = enemyBulletPool.poll();
             bullet.init(x, y, vx, vy, BulletType.DANMAKU, damage, false);
+            bullet.setSprite(AssetManager.getInstance().getTextureRegion(key)); // Add setSprite using key
         } else {
-            bullet = EntityFactory.createEnemyBullet(x, y, damage); // Factory Pattern
+            bullet = EntityFactory.createEnemyBullet(x, y, damage, key); // Add key as 4th argument
             bullet.init(x, y, vx, vy, BulletType.DANMAKU, damage, false);
         }
         activeEnemyBullets.add(bullet);
         return bullet;
+    }
+
+    // [ADDITION] Add the following 5-parameter overloaded method (delegating to the 6-parameter method above):
+    public Bullet spawnEnemyBullet(float x, float y, float vx, float vy, int damage) {
+        return spawnEnemyBullet(x, y, vx, vy, damage, "bullet_danmaku");
     }
 
     public void update(float delta, float screenWidth, float screenHeight) {
@@ -60,6 +76,12 @@ public class BulletManager {
         Iterator<Bullet> pIter = activePlayerBullets.iterator();
         while (pIter.hasNext()) {
             Bullet bullet = pIter.next();
+
+            // [ADDITION] Insert this check right before bullet.update(delta):
+            if (entities != null && bullet.getMovementPattern() instanceof HomingBulletMovement homing && homing.getEntities() == null) {
+                homing.setEntities(entities);
+            }
+
             bullet.update(delta);
 
             if (bullet.isOffScreen(screenWidth, screenHeight) || bullet.isDestroyed()) {
@@ -92,32 +114,18 @@ public class BulletManager {
         }
     }
 
-    public void freePlayerBullet(Bullet bullet) {
-        if (activePlayerBullets.remove(bullet)) {
-            bullet.destroy();
-            playerBulletPool.offer(bullet);
-        }
-    }
-
-    public void freeEnemyBullet(Bullet bullet) {
-        if (activeEnemyBullets.remove(bullet)) {
-            bullet.destroy();
-            enemyBulletPool.offer(bullet);
-        }
-    }
-
-    // Spell Card (Bomb) Execution: Clear all active enemy bullets and convert them into POINT item drops!
+    // Bomb / Spell Card execution: Clear active enemy bullets and convert to drop items!
     public void clearEnemyBullets(List<GameObject> entities) {
-        Iterator<Bullet> iterator = activeEnemyBullets.iterator();
-        while (iterator.hasNext()) {
-            Bullet bullet = iterator.next();
+        Iterator<Bullet> eIter = activeEnemyBullets.iterator();
+        while (eIter.hasNext()) {
+            Bullet bullet = eIter.next();
             if (entities != null) {
                 Item item = EntityFactory.createItem(bullet.getX(), bullet.getY(), ItemType.POINT);
                 entities.add(item);
             }
             bullet.destroy();
-            iterator.remove();
-            enemyBulletPool.offer(bullet);
+            eIter.remove();
+            enemyBulletPool.offer(bullet); // Recycles back to pool!
         }
     }
 
@@ -125,7 +133,6 @@ public class BulletManager {
         clearEnemyBullets(null);
     }
 
-    // Clear all player bullets when restarting the game (Copy-Paste):
     public void clearPlayerBullets() {
         Iterator<Bullet> pIter = activePlayerBullets.iterator();
         while (pIter.hasNext()) {
@@ -136,8 +143,14 @@ public class BulletManager {
         }
     }
 
+    // Dynamic Getters & Clean Recycling Methods for Testing
     public List<Bullet> getActivePlayerBullets() { return activePlayerBullets; }
     public List<Bullet> getActiveEnemyBullets() { return activeEnemyBullets; }
+    public Queue<Bullet> getPlayerBulletPool() { return playerBulletPool; }
+    public Queue<Bullet> getEnemyBulletPool() { return enemyBulletPool; }
     public int getPlayerPoolSize() { return playerBulletPool.size(); }
     public int getEnemyPoolSize() { return enemyBulletPool.size(); }
+    // [ADDITION] Add the following getters & setters at the bottom of the BulletManager class:
+    public List<GameObject> getEntities() { return entities; }
+    public void setEntities(List<GameObject> entities) { this.entities = entities; }
 }

@@ -19,7 +19,9 @@ public class MoveCommand implements Command {
 
     @Override
     public void execute(Player player, BulletManager bulletManager) {
-        player.move(dx, dy);
-        player.updateAnimationState(dx);
+        if (player != null) {
+            player.move(dx, dy);
+            player.updateAnimationState(dx);
+        }
     }
 }

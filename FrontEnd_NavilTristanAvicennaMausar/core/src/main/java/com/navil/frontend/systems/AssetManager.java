@@ -28,27 +28,39 @@ public class AssetManager {
 
     public void init() {
         // Reimu Animations (player.png: 32x48 per tile, 8 columns)
-        // Row 0: Idle (8 frames), Row 1: Left loop (Cols 4..7, 4 frames), Row 2: Right loop (Cols 4..7, 4 frames)
-        registerAnimationFromSheet("player_idle",  "player.png", 32, 48, 0, 0, 8, 0.125f, Animation.PlayMode.LOOP);
-        registerAnimationFromSheet("player_left",  "player.png", 32, 48, 1, 0, 4, 0.12f,  Animation.PlayMode.LOOP);
-        registerAnimationFromSheet("player_right", "player.png", 32, 48, 2, 0, 4, 0.12f,  Animation.PlayMode.LOOP);
+        // Row 0: Idle (8 frames), Row 1: Left loop (Cols 0..3, 4 frames), Row 2: Right loop (Cols 0..3, 4 frames)
+        registerAnimationFromSheet("player_idle",       "player.png", 32, 48, 0, 0, 8, 0.125f, Animation.PlayMode.LOOP);
+        registerAnimationFromSheet("player_left",       "player.png", 32, 48, 1, 0, 4, 0.12f,  Animation.PlayMode.LOOP);
+        registerAnimationFromSheet("player_right",      "player.png", 32, 48, 2, 0, 4, 0.12f,  Animation.PlayMode.LOOP);
+        registerAnimationFromSheet("player_left_loop",  "player.png", 32, 48, 1, 0, 4, 0.12f,  Animation.PlayMode.LOOP);
+        registerAnimationFromSheet("player_right_loop", "player.png", 32, 48, 2, 0, 4, 0.12f,  Animation.PlayMode.LOOP);
 
-        // Boss Cirno Animations (cirno.png: 64x64 per tile, 4 columns)
-        // Row 0: Idle (4 frames), Row 1: Left loop (Cols 2..3, 2 frames), Row 2: Right loop (Cols 2..3, 2 frames)
-        registerAnimationFromSheet("boss_idle",  "rumia.png", 64, 64, 0, 0, 4, 0.2f,  Animation.PlayMode.LOOP);
-        registerAnimationFromSheet("boss_left",  "rumia.png", 64, 64, 1, 0, 4, 0.15f, Animation.PlayMode.REVERSED);
-        registerAnimationFromSheet("boss_right", "rumia.png", 64, 64, 2, 0, 4, 0.15f, Animation.PlayMode.NORMAL);
+        // Boss Rumia Animations (rumia.png: 64x64 per tile, 4 columns)
+        // Row 0: Idle (4 frames), Row 1: Left (4 frames, REVERSED), Row 2: Right (4 frames, NORMAL)
+        registerAnimationFromSheet("boss_idle",       "rumia.png", 64, 64, 0, 0, 4, 0.2f,  Animation.PlayMode.LOOP);
+        registerAnimationFromSheet("boss_left",       "rumia.png", 64, 64, 1, 0, 4, 0.15f, Animation.PlayMode.REVERSED);
+        registerAnimationFromSheet("boss_right",      "rumia.png", 64, 64, 2, 0, 4, 0.15f, Animation.PlayMode.NORMAL);
+        registerAnimationFromSheet("boss_left_loop",  "rumia.png", 64, 64, 1, 0, 4, 0.15f, Animation.PlayMode.REVERSED);
+        registerAnimationFromSheet("boss_right_loop", "rumia.png", 64, 64, 2, 0, 4, 0.15f, Animation.PlayMode.NORMAL);
 
-        // Stage 1 Fairy (fairy.png: 32x32 per tile, Row 1, 8 frames)
+        // Stage 1 Fairy (fairy.png: 32x32 per tile)
         registerAnimationFromSheet("fairy_idle_red",  "fairy.png", 32, 32, 1, 8, 0.125f);
         registerAnimationFromSheet("fairy_idle_blue", "fairy.png", 32, 32, 0, 8, 0.125f);
+        registerAnimationFromSheet("fairy_idle",      "fairy.png", 32, 32, 1, 8, 0.125f);
 
         // Bullets:
+        // Authentic Touhou 6 Ofuda Amulets from amulet_reimu.png (16x16)
+        // Col 0: Straight Amulet, Col 1: Homing Amulet
         registerRegionFromSheet("bullet_amulet",        "amulet_reimu.png", 16, 16, 0, 0);
         registerRegionFromSheet("bullet_amulet_homing", "amulet_reimu.png", 16, 16, 1, 0);
 
-        // Enemy Danmaku from bullets_small.png (16x16, Row 2, Col 3: blue orb)
-        registerRegionFromSheet("bullet_danmaku",       "bullets_small.png", 16, 16, 2, 3);
+        // Enemy Danmaku from bullets_small.png (16x16, Row 2): colored orb variants
+        registerRegionFromSheet("bullet_danmaku",        "bullets_small.png", 16, 16, 2, 3); // Default / Blue
+        registerRegionFromSheet("bullet_danmaku_blue",   "bullets_small.png", 16, 16, 2, 3);
+        registerRegionFromSheet("bullet_danmaku_red",    "bullets_small.png", 16, 16, 2, 6);
+        registerRegionFromSheet("bullet_danmaku_purple", "bullets_small.png", 16, 16, 2, 4);
+        registerRegionFromSheet("bullet_danmaku_orange", "bullets_small.png", 16, 16, 2, 15);
+        registerRegionFromSheet("bullet_danmaku_green",  "bullets_small.png", 16, 16, 2, 10);
 
         // Correct items.png column coordinates (16x16 per cell):
         registerRegionFromSheet("item_power", "items.png", 16, 16, 0, 0);
@@ -112,7 +124,7 @@ public class AssetManager {
             anim.setPlayMode(playMode);
 
             animationMap.put(key, anim);
-            textureRegionMap.put(key, frames[0]); // Default first frame
+            textureRegionMap.put(key, frames[0]);
         }
     }
 

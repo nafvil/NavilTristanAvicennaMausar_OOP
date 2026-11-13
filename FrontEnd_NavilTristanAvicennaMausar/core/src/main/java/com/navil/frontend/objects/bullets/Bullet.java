@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.navil.frontend.objects.Collidable;
 import com.navil.frontend.objects.GameObject;
 import com.navil.frontend.objects.enemies.Enemy;
+import com.navil.frontend.objects.patterns.bulletStrategy.BulletMovementPattern;
 
 public class Bullet extends GameObject {
     private BulletType bulletType;
@@ -14,6 +15,7 @@ public class Bullet extends GameObject {
     private float angle = 90f;
     private boolean isPlayerBullet;
     private boolean grazed;
+    private BulletMovementPattern movementPattern;
 
     public Bullet(float x, float y, BulletType bulletType, int damage) {
         super(x, y, 16, 16, 400f, Color.YELLOW);
@@ -54,6 +56,7 @@ public class Bullet extends GameObject {
         this.active = true;
         this.stateTime = 0f;
         this.grazed = false; // Reset graze state for recycled pooled bullet
+        this.movementPattern = null; // Reset trajectory strategy so recycled bullets keep no leftovers
     }
 
     @Override
@@ -70,9 +73,14 @@ public class Bullet extends GameObject {
     @Override
     public void update(float delta) {
         super.update(delta);
-        // Bullet movement using velocity components
-        this.x += vx * delta;
-        this.y += vy * delta;
+        if (movementPattern != null) {
+            // Delegate movement to the injected trajectory strategy
+            movementPattern.move(this, delta);
+        } else {
+            // Default movement using velocity components
+            this.x += vx * delta;
+            this.y += vy * delta;
+        }
     }
 
     @Override
@@ -89,6 +97,9 @@ public class Bullet extends GameObject {
     public boolean isPlayerBullet() { return isPlayerBullet; }
     public float getVx() { return vx; }
     public float getVy() { return vy; }
+
+    public BulletMovementPattern getMovementPattern() { return movementPattern; }
+    public void setMovementPattern(BulletMovementPattern movementPattern) { this.movementPattern = movementPattern; }
 
     public float getAngle() { return angle; }
     public void setAngle(float angle) { this.angle = angle; }

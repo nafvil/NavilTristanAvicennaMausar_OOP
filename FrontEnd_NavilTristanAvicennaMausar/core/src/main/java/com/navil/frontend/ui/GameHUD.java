@@ -19,9 +19,10 @@ public class GameHUD implements GameObserver {
     private ShapeRenderer shapeRenderer;
 
     public GameHUD() {
-        // Lazily initialized during rendering so it can run safely in headless CLI tests
+        // Lazy initialized during rendering to safely support headless CLI tests
     }
 
+    // Observer Pattern Updates
     @Override
     public void onScoreChanged(long newScore) {
         this.score = newScore;
@@ -30,6 +31,11 @@ public class GameHUD implements GameObserver {
     @Override
     public void onHpChanged(int currentHp) {
         this.hp = currentHp;
+    }
+
+    @Override
+    public void onLivesChanged(int currentLives) {
+        this.lives = currentLives;
     }
 
     @Override
@@ -47,11 +53,6 @@ public class GameHUD implements GameObserver {
         this.grazeCount = currentGraze;
     }
 
-    @Override
-    public void onLivesChanged(int currentLives) {
-        this.lives = currentLives;
-    }
-
     public void renderBackground() {
         if (Gdx.graphics != null && Gdx.gl != null) {
             if (shapeRenderer == null) {
@@ -62,7 +63,7 @@ public class GameHUD implements GameObserver {
             // Playfield boundary box: X: 32..416, Y: 16..560 (Width 384, Height 544)
             shapeRenderer.rect(32, 16, 384, 544);
 
-            // Information panel (Sidebar) boundary box: X: 432..768, Y: 16..560 (Width 336, Height 544)
+            // Sidebar boundary box: X: 432..768, Y: 16..560 (Width 336, Height 544)
             shapeRenderer.setColor(Color.DARK_GRAY);
             shapeRenderer.rect(432, 16, 336, 544);
             shapeRenderer.end();
@@ -104,6 +105,7 @@ public class GameHUD implements GameObserver {
         return shapeRenderer;
     }
 
+    // Encapsulation getters for Testing
     public long getScore() { return score; }
     public int getHp() { return hp; }
     public int getLives() { return lives; }
