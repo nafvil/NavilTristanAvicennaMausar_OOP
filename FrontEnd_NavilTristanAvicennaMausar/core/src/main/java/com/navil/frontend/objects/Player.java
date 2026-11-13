@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.navil.frontend.objects.patterns.entityStrategy.FixedMovement;
+import com.navil.frontend.objects.patterns.shootingStrategy.CompositeShootingPattern;
 import com.navil.frontend.objects.patterns.shootingStrategy.FrontShot;
 import com.navil.frontend.objects.patterns.shootingStrategy.SideShot;
 import com.navil.frontend.observers.GameObserver;
