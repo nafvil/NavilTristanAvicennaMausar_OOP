@@ -16,6 +16,7 @@ public class Fairy extends Enemy {
         // TODO (1 point): Inject default strategies FrontShot(150f, 10) and LinearEntityMovement(0f, -40f)
         setShootingPattern(new FrontShot(150f, 10));
         setMovementPattern(new LinearEntityMovement(0f, -40f));
+        setShotHitboxSize(28f, 28f);
     }
 
     public Fairy(float x, float y, String name, int hp) {
@@ -23,6 +24,7 @@ public class Fairy extends Enemy {
         // TODO: Inject the same default strategies
         setShootingPattern(new FrontShot(150f, 10));
         setMovementPattern(new LinearEntityMovement(0f, -40f));
+        setShotHitboxSize(28f, 28f);
     }
 
     public Fairy(float x, float y, String name, int hp, float shootDelay, float shootInterval, int maxShots) {
@@ -33,6 +35,7 @@ public class Fairy extends Enemy {
         // TODO (2 points): Inject default strategies FrontShot and LinearEntityMovement
         setShootingPattern(new FrontShot(150f, 10));
         setMovementPattern(new LinearEntityMovement(0f, -40f));
+        setShotHitboxSize(28f, 28f);
     }
 
     public boolean canShoot(float delta) {

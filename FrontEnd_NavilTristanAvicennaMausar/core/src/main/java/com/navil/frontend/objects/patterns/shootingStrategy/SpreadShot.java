@@ -10,33 +10,13 @@ public class SpreadShot implements ShootingPattern {
     private float speed;
     private int numBullets;
     private float spreadAngleDegrees;
-    private GameObject target;
-    private int damage = 1;
+    private int damage;
     private float horizontalSpacing = 0f;
     private BulletMovementPattern bulletMovementPattern;
+    private GameObject target;
     private String spriteKey;
 
-    public SpreadShot(float speed, int numBullets, float spreadAngleDegrees) {
-        this(speed, numBullets, spreadAngleDegrees, null, 1);
-    }
-
-    public SpreadShot(float speed, int numBullets, float spreadAngleDegrees, int damage) {
-        this(speed, numBullets, spreadAngleDegrees, null, damage);
-    }
-
-    public SpreadShot(float speed, int numBullets, float spreadAngleDegrees, GameObject target) {
-        this(speed, numBullets, spreadAngleDegrees, target, 1);
-    }
-
-    public SpreadShot(float speed, int numBullets, float spreadAngleDegrees, GameObject target, int damage) {
-        this.speed = speed;
-        this.numBullets = numBullets;
-        this.spreadAngleDegrees = spreadAngleDegrees;
-        this.target = target;
-        this.damage = damage;
-    }
-
-    // Master Constructor: Accommodates all attributes and configurations
+    // Master Constructor: Menampung seluruh atribut dan konfigurasi
     public SpreadShot(float speed, int numBullets, float spreadAngleDegrees, int damage, float horizontalSpacing,
                       BulletMovementPattern bulletMovementPattern, GameObject target, String spriteKey) {
         this.speed = speed;
@@ -49,18 +29,27 @@ public class SpreadShot implements ShootingPattern {
         this.spriteKey = spriteKey;
     }
 
-    // New constructor: injecting trajectory strategy (BulletMovementPattern)
+    // Convenience Constructors (Mendelegasikan ke Master Constructor)
+    public SpreadShot(float speed, int numBullets, float spreadAngleDegrees) {
+        this(speed, numBullets, spreadAngleDegrees, 15, 0f, null, null, null);
+    }
+
+    public SpreadShot(float speed, int numBullets, float spreadAngleDegrees, int damage) {
+        this(speed, numBullets, spreadAngleDegrees, damage, 0f, null, null, null);
+    }
+
     public SpreadShot(float speed, int numBullets, float spreadAngleDegrees, int damage, BulletMovementPattern bulletMovementPattern) {
         this(speed, numBullets, spreadAngleDegrees, damage, 0f, bulletMovementPattern, null, null);
     }
 
-    // New constructor: injecting target and bullet color sprite (e.g., "bullet_danmaku_red")
     public SpreadShot(float speed, int numBullets, float spreadAngleDegrees, int damage, GameObject target, String spriteKey) {
         this(speed, numBullets, spreadAngleDegrees, damage, 0f, null, target, spriteKey);
     }
 
     @Override
     public void execute(float originX, float originY, BulletManager bulletManager, boolean isPlayer) {
+        if (bulletManager == null) return;
+
         // Base direction angle: Aim at target if present (ZUN FAN_AIMED), otherwise default 90 deg (Player) / 270 deg (Enemy)
         float centerAngle;
         if (target != null) {
@@ -73,9 +62,7 @@ public class SpreadShot implements ShootingPattern {
 
         float startAngle = centerAngle - (spreadAngleDegrees / 2f);
         float angleStep = (numBullets > 1) ? (spreadAngleDegrees / (numBullets - 1)) : 0;
-
-        int bulletDamage = isPlayer ? 25 : this.damage;
-
+        int bulletDamage = this.damage;
         float startX = (horizontalSpacing > 0f && numBullets > 1) ? (originX - ((numBullets - 1) * horizontalSpacing / 2f)) : originX;
 
         for (int i = 0; i < numBullets; i++) {
@@ -91,11 +78,10 @@ public class SpreadShot implements ShootingPattern {
                 bullet = bulletManager.spawnPlayerBullet(spawnX, originY, vx, vy, bulletDamage, spriteKey);
             } else {
                 bullet = (spriteKey != null)
-                        ? bulletManager.spawnEnemyBullet(spawnX, originY, vx, vy, bulletDamage, spriteKey)
-                        : bulletManager.spawnEnemyBullet(spawnX, originY, vx, vy, bulletDamage);
+                    ? bulletManager.spawnEnemyBullet(spawnX, originY, vx, vy, bulletDamage, spriteKey)
+                    : bulletManager.spawnEnemyBullet(spawnX, originY, vx, vy, bulletDamage);
             }
 
-            // Inject trajectory strategy into bullet if available
             if (bullet != null && bulletMovementPattern != null) {
                 bullet.setMovementPattern(bulletMovementPattern);
             }
@@ -111,9 +97,6 @@ public class SpreadShot implements ShootingPattern {
     public float getSpreadAngleDegrees() { return spreadAngleDegrees; }
     public void setSpreadAngleDegrees(float spreadAngleDegrees) { this.spreadAngleDegrees = spreadAngleDegrees; }
 
-    public GameObject getTarget() { return target; }
-    public void setTarget(GameObject target) { this.target = target; }
-
     public int getDamage() { return damage; }
     public void setDamage(int damage) { this.damage = damage; }
 
@@ -122,6 +105,9 @@ public class SpreadShot implements ShootingPattern {
 
     public BulletMovementPattern getBulletMovementPattern() { return bulletMovementPattern; }
     public void setBulletMovementPattern(BulletMovementPattern bulletMovementPattern) { this.bulletMovementPattern = bulletMovementPattern; }
+
+    public GameObject getTarget() { return target; }
+    public void setTarget(GameObject target) { this.target = target; }
 
     public String getSpriteKey() { return spriteKey; }
     public void setSpriteKey(String spriteKey) { this.spriteKey = spriteKey; }

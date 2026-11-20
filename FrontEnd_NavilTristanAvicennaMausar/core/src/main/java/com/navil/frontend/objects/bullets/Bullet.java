@@ -2,12 +2,15 @@ package com.navil.frontend.objects.bullets;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Rectangle;
 import com.navil.frontend.objects.Collidable;
 import com.navil.frontend.objects.GameObject;
 import com.navil.frontend.objects.enemies.Enemy;
 import com.navil.frontend.objects.patterns.bulletStrategy.BulletMovementPattern;
 
 public class Bullet extends GameObject {
+    private static final float PLAYER_SHOT_HITBOX = 12f;
+
     private BulletType bulletType;
     private int damage;
     private float vx;
@@ -90,6 +93,14 @@ public class Bullet extends GameObject {
             enemy.takeDamage(damage);
             this.destroy(); // Bullet is deactivated and returned to pool
         }
+    }
+
+    public Rectangle getShotHitbox() {
+        if (!isPlayerBullet) {
+            return getCoreHitbox();
+        }
+        return new Rectangle(x + (width - PLAYER_SHOT_HITBOX) / 2f, y + (height - PLAYER_SHOT_HITBOX) / 2f,
+                PLAYER_SHOT_HITBOX, PLAYER_SHOT_HITBOX);
     }
 
     public BulletType getBulletType() { return bulletType; }

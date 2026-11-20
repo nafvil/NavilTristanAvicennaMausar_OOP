@@ -475,41 +475,41 @@ public class Player extends EntityShooter {
         if (power < 8) {
             // Rank 1 (Power 0 - 7): 1 Center Straight Shot
             // TODO: Set Main Shooting Pattern as FrontShot with normalSpeed and DMG 48
-            mainShootingPattern = new FrontShot(normalSpeed, 48));
+            mainShootingPattern = new FrontShot(normalSpeed, 48);
             // TODO: Set Side Shooting Pattern as null
             sideShootingPattern = null;
             homingCooldown = 30f / 60f;
         } else if (power < 16) {
             // Rank 2 (Power 8 - 15): 1 Center Straight Shot + 2 Homing Flank Amulets (Homing SideShot)
             // TODO: Set Main Shooting Pattern as FrontShot with normalSpeed and DMG 48
-            mainShootingPattern = new FrontShot(normalSpeed, 48));
+            mainShootingPattern = new FrontShot(normalSpeed, 48);
             // TODO: Set Side Shooting Pattern as SideShot with homingSpeed, DMG 14, offsets (sideHOffset, sideVOffset), angles (leftAngle, rightAngle), dualSides true; with bullet movement HomingBulletMovement having turnSpeed 360f; and sprite "bullet_amulet_homing"
             sideShootingPattern = new SideShot(homingSpeed, 14, sideHOffset, sideVOffset, leftAngle, rightAngle, true, 360f, "bullet_amulet_homing" );
             homingCooldown = 30f / 60f;
         } else if (power < 32) {
             // Rank 3 (Power 16 - 31): 2 Tightly Spaced Center Straight Shots + 2 Homing Flank Amulets
             // TODO: Set Main Shooting Pattern as SpreadShot with normalSpeed, 2 bullets, angle dualSpreadAngle, DMG 30, horizontalSpacing 8f, and null for movementPattern, target, and spriteKey
-            mainShootingPattern = new SpreadShot(normalSpeed, 2, dualSpreadAngle, 30, 8f, null, null, null)
+            mainShootingPattern = new SpreadShot(normalSpeed, 2, dualSpreadAngle, 30, 8f, null, null, null);
             // TODO: Set Side Shooting Pattern as SideShot with homingSpeed, DMG 14, offsets (sideHOffset, sideVOffset), angles (leftAngle, rightAngle), dualSides true; with bullet movement HomingBulletMovement having turnSpeed 360f; and sprite "bullet_amulet_homing"
             homingCooldown = 30f / 60f;
         } else if (power < 48) {
             // Rank 4 (Power 32 - 47): 3 Center Fan Spread Shots + 2 Homing Flank Amulets
             // TODO: Set Main Shooting Pattern as SpreadShot with normalSpeed, 3 bullets, angle spreadAngle, and DMG 26
-            mainShootingPattern = new SpreadShot(normalSpeed, 3, spreadAngle, 26)
+            mainShootingPattern = new SpreadShot(normalSpeed, 3, spreadAngle, 26);
             // TODO: Set Side Shooting Pattern as SideShot with homingSpeed, DMG 14, offsets (sideHOffset, sideVOffset), angles (leftAngle, rightAngle), dualSides true; with bullet movement HomingBulletMovement having turnSpeed 360f; and sprite "bullet_amulet_homing"
             sideShootingPattern = new SideShot(homingSpeed, 14, sideHOffset, sideVOffset, leftAngle, rightAngle, true, 360f, "bullet_amulet_homing" );
             homingCooldown = 30f / 60f;
         } else if (power < 64) {
             // Rank 5 (Power 48 - 63): 3 Center Fan Spread Shots + Homing Amulets (Cadence accelerated to 15 frames / 0.25s!)
             // TODO: Set Main Shooting Pattern as SpreadShot with normalSpeed, 3 bullets, angle spreadAngle, and DMG 26
-            mainShootingPattern = new SpreadShot(normalSpeed, 2, dualSpreadAngle, 30, 8f, null, null, null)
+            mainShootingPattern = new SpreadShot(normalSpeed, 2, dualSpreadAngle, 30, 8f, null, null, null);
             // TODO: Set Side Shooting Pattern as SideShot with homingSpeed, DMG 12, offsets (sideHOffset, sideVOffset), angles (leftAngle, rightAngle), dualSides true; with bullet movement HomingBulletMovement having turnSpeed 360f; and sprite "bullet_amulet_homing"
             sideShootingPattern = new SideShot(homingSpeed, 14, sideHOffset, sideVOffset, leftAngle, rightAngle, true, 360f, "bullet_amulet_homing" );
             homingCooldown = 15f / 60f;
         } else if (power < 80) {
             // Rank 6 (Power 64 - 79): 3 Center Fan Spread Shots + 4 Homing Amulets (Composite Pattern)
             // TODO: Set Main Shooting Pattern as SpreadShot with normalSpeed, 3 bullets, angle spreadAngle, and DMG 26
-            mainShootingPattern = new SpreadShot(normalSpeed, 3, spreadAngle, 26)
+            mainShootingPattern = new SpreadShot(normalSpeed, 3, spreadAngle, 26);
             // TODO: Set Side Shooting Pattern as CompositeShootingPattern with 2 SideShots:
             //       1) SideShot with homingSpeed, DMG 9, offsets (sideHOffset, sideVOffset), angles (leftAngle, rightAngle), dualSides true; with bullet movement HomingBulletMovement having turnSpeed 360f; and sprite "bullet_amulet_homing"
             //       2) SideShot with homingSpeed, DMG 12, offsets (sideHOffset + 4f, sideVOffset), angles (leftAngle + 30f, rightAngle - 30f), dualSides true; with bullet movement HomingBulletMovement having turnSpeed 360f; and sprite "bullet_amulet_homing"
